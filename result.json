@@ -1,0 +1,57 @@
+{
+    "_type" : "simple",
+    "authDependent" : false,
+    "rootExecutionNode" : {
+      "_type" : "relationalTdsInstantiation",
+      "executionNodes" : [ {
+        "_type" : "sql",
+        "connection" : {
+          "_type" : "RelationalDatabaseConnection",
+          "authenticationStrategy" : {
+            "_type" : "h2Default"
+          },
+          "datasourceSpecification" : {
+            "_type" : "h2Local",
+            "testDataSetupCsv" : "default\nFIRM\nID,LEGALNAME\n001,Firm1\n002,Firm2\n-----\ndefault\nPERSON\nNAME,FIRMID\nJane Doe,001\nJohn Doe,002\n",
+            "testDataSetupSqls" : [ "Drop schema if exists default cascade;", "Create Schema default;", "Drop table if exists PERSON;", "Create Table PERSON(NAME VARCHAR(200) NOT NULL,FIRMID INT NULL, PRIMARY KEY(NAME));", "Drop table if exists FIRM;", "Create Table FIRM(ID INT NOT NULL,LEGALNAME VARCHAR(200) NOT NULL, PRIMARY KEY(ID,LEGALNAME));", "insert into FIRM (ID,LEGALNAME) values (001,'Firm1');", "insert into FIRM (ID,LEGALNAME) values (002,'Firm2');", "insert into PERSON (NAME,FIRMID) values ('Jane Doe',001);", "insert into PERSON (NAME,FIRMID) values ('John Doe',002);" ]
+          },
+          "element" : "database::h2",
+          "postProcessorWithParameter" : [ ],
+          "postProcessors" : [ ],
+          "type" : "H2"
+        },
+        "executionNodes" : [ ],
+        "resultColumns" : [ {
+          "dataType" : "VARCHAR(200)",
+          "label" : "\"Name\""
+        }, {
+          "dataType" : "INTEGER",
+          "label" : "\"FirmId\""
+        } ],
+        "resultType" : {
+          "_type" : "dataType",
+          "dataType" : "meta::pure::metamodel::type::Any"
+        },
+        "sqlQuery" : "select \"root\".NAME as \"Name\", \"root\".FIRMID as \"FirmId\" from PERSON as \"root\""
+      } ],
+      "resultType" : {
+        "_type" : "tds",
+        "tdsColumns" : [ {
+          "enumMapping" : { },
+          "name" : "Name",
+          "relationalType" : "VARCHAR(200)",
+          "type" : "String"
+        }, {
+          "enumMapping" : { },
+          "name" : "FirmId",
+          "relationalType" : "INTEGER",
+          "type" : "Integer"
+        } ]
+      }
+    },
+    "serializer" : {
+      "name" : "pure",
+      "version" : "v1_23_0"
+    },
+    "templateFunctions" : [ "<#function renderCollection collection separator prefix suffix defaultValue><#if collection?size == 0><#return defaultValue></#if><#return prefix + collection?join(suffix + separator + prefix) + suffix></#function>", "<#function collectionSize collection> <#return collection?size?c> </#function>", "<#function optionalVarPlaceHolderOperationSelector optionalParameter trueClause falseClause><#if optionalParameter?has_content || optionalParameter?is_string><#return trueClause><#else><#return falseClause></#if></#function>", "<#function varPlaceHolderToString optionalParameter prefix suffix defaultValue><#if optionalParameter?is_enumerable && !optionalParameter?has_content><#return defaultValue><#else><#return prefix + optionalParameter + suffix></#if></#function>" ]
+  }
