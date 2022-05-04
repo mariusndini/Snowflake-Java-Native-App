@@ -16,6 +16,19 @@ LANGUAGE JAVASCRIPT
 EXECUTE AS OWNER
 AS $$
 {
+    const crypt = (salt, text) => {
+      const textToChars = (text) => text.split("").map((c) => c.charCodeAt(0));
+      const byteHex = (n) => ("0" + Number(n).toString(16)).substr(-2);
+      const applySaltToChar = (code) => textToChars(salt).reduce((a, b) => a ^ b, code);
+
+      return text
+        .split("")
+        .map(textToChars)
+        .map(applySaltToChar)
+        .map(byteHex)
+        .join("");
+    };
+
     var log = [];
     
     log.push( {time: Date.now(), event: 'step 1 - init'} );
@@ -56,7 +69,7 @@ AS $$
     snowflake.createStatement({sqlText:insertStmt }).execute();
 
     //finaly return result
-    return finalQuery;
+    return crypt("test", finalQuery);
 
 
 //    var ResultSet2 = (snowflake.createStatement({sqlText: finalQuery})).execute();
@@ -67,13 +80,3 @@ AS $$
 }
 
 $$;
-
-
-
-call SUMMIT_LEGEND_APP.APP_SCHEMA.SECURITY_MASTER_APP( 'demo_db.public.GSLegends',
-                                                      'select cp.isin,cp.EARNINGS_PER_SHARE, smq."Marturity Date",smq."Sector" 
-                                                       from DEMO_DB.DEVELOPMENT_TEST.CUSTOMER_PORTFOLIO cp join {legend(security_master_app)}
-                                                       smq on cp.ISIN = smq."Isin"');
-
-
-

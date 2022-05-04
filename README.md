@@ -14,6 +14,8 @@ SQL code documented below and can run on Snowflake via <b>Copy + Paste</b>
 SQL Code also provided for <b>Producer</b> and <b>Consumer</b> in <b>SQL</b> folder.
 <br>
 SQL Folder contains <i>_ORIG</i> and <i>_LOG</i> files. <i>_LOG</i> will have logging logic embedded.
+<br><br>
+SQL Folder also contains <b>decrypt</b> javascript app to be defined on the producer side.
 
 
 
@@ -100,11 +102,47 @@ The producer has the option to create a [stream](https://docs.snowflake.com/en/u
 
 <br>
 
-## Currently Not implemented
+## Encryption & Decryption of Logs
 
-Logging encryption - as setup currently consumer has ability to view logs. Encryption is possible prior to writing results to logging table. Producer can decrypt data once it is shared back.
+Logs can be encrypted prior to being writen to consumer LOG tables. Possible encryption methods outlined below.
 
+<b>Decrypt</b>
 
+```javascript
+create or replace procedure SUMMIT_LEGEND_APP.APP_SCHEMA.DECRYPT(SALT varchar, ENCODED varchar  )
+RETURNS STRING
+LANGUAGE JAVASCRIPT
+EXECUTE AS OWNER
+AS $$
+{
+const textToChars = (text) => text.split("").map((c) => c.charCodeAt(0));
+const applySaltToChar = (code) => textToChars(SALT).reduce((a, b) => a ^ b, code);
+return ENCODED
+    .match(/.{1,2}/g)
+    .map((hex) => parseInt(hex, 16))
+    .map(applySaltToChar)
+    .map((charCode) => String.fromCharCode(charCode))
+    .join("");
+}
+$$;
+```
+
+<b>Encrypt></b>
+
+```javascript
+const crypt = (salt, text) => {
+    const textToChars = (text) => text.split("").map((c) => c.charCodeAt(0));
+    const byteHex = (n) => ("0" + Number(n).toString(16)).substr(-2);
+    const applySaltToChar = (code) => textToChars(salt).reduce((a, b) => a ^ b, code);
+
+return text
+    .split("")
+    .map(textToChars)
+    .map(applySaltToChar)
+    .map(byteHex)
+    .join("");
+};
+```
 
 
 
