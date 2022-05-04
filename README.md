@@ -30,9 +30,9 @@ Ultimately, results are written to a table and shared back to producer from cons
 <br><br>
 On the consumer side new tables are created to hold logging:
 ```sql
-create or replace schema DEMO_DB.LOGS;
-create or replace table APP_LOG (evt string);
-create or replace table JS_LOG (evt string);
+create or replace schema SUMMIT_APP_LOCAL.LOGS;
+create or replace table SUMMIT_APP_LOCAL.LOGS.APP_LOG (evt string);
+create or replace table SUMMIT_APP_LOCAL.LOGS.JS_LOG (evt string);
 ```
 
 ## Logging in JAVA NATIVE App
@@ -74,10 +74,10 @@ log.push( {time: Date.now(), event: 'step 2 - complete running java code'} );
 Eventually toward the end of the script the logs will be saved to two tables (<i>APP_LOG</i> & <i>JS_LOG</i>), one more the Native App and one of the JS consumer app.
 
 ```javascript
-var insertStmt = `insert into DEMO_DB.LOGS.APP_LOG(select '${JSON.stringify(JSON.parse(ResultSet.getColumnValue(1)).log)}')` ;
+var insertStmt = `insert into SUMMIT_APP_LOCAL.LOGS.APP_LOG(select '${JSON.stringify(JSON.parse(ResultSet.getColumnValue(1)).log)}')` ;
 snowflake.createStatement({sqlText:insertStmt }).execute();
 
-var insertStmt = `insert into DEMO_DB.LOGS.JS_LOG(select '${ JSON.stringify(log) }')` ;
+var insertStmt = `insert into SUMMIT_APP_LOCAL.LOGS.JS_LOG(select '${ JSON.stringify(log) }')` ;
 snowflake.createStatement({sqlText:insertStmt }).execute();
 ```
 <br>
@@ -94,7 +94,7 @@ The producer has the option to create a [stream](https://docs.snowflake.com/en/u
 [{"time":" 1651628262838","method":"call","class":"legend"},{"time":" 1651628262867","event":"step 3"},{"time":" 1651628262871","p1":"MyParameter"},{"time":" 1651628262926","event":"step 3"},{"time":" 1651628263374","event":"step 3"},{"time":" 1651628263375","event":"final step"},{"time":" 1651628263375","sql":"Legend SQL Goes Here - Test App (SQL THIS FROM TABLE WHERE VALUE > 1)"}]
 ```
 <br> 
-<b>Wrapper JavaScript App</b> Log Example
+<b>JavaScript App</b> Log Example
 
 ```json
 [{"time":1651628261651,"event":"step 1 - init"},{"time":1651628263512,"event":"step 2 - complete running java code"},{"time":1651628263512,"event":"step 3 - got legend query"},{"time":1651628263512,"event":"step - 4 - replaced legend query"},{"time":1651628263512,"event":"step 5 - almost done"},{"time":1651628263563,"acct":"SFSENORTHAMERICA_MARIUS"},{"time":1651628263563,"finalQuery":"select listagg(object_construct(*)::varchar, ') from (select cp.isin,cp.EARNINGS_PER_SHARE, smq."Marturity Date",smq."Sector" from DEMO_DB.DEVELOPMENT_TEST.CUSTOMER_PORTFOLIO cp join ("select \"root\".NAME as \"Name\", \"root\".FIRMID as \"FirmId\" from PERSON as \"root\"") smq on cp.ISIN = smq."Isin")"}]
@@ -144,6 +144,27 @@ return text
 };
 ```
 
+
+## Permissions 
+```SQL
+use role accountadmin;
+grant create share , alter share, drop share to role SUMMIT_APP_CONSUMER;
+use role SUMMIT_APP_CONSUMER;
+
+create schema SUMMIT_APP_LOCAL.LOGS;
+create table SUMMIT_APP_LOCAL.LOGS.LOG_TABLE (...);
+grant usage on schema SUMMIT_APP_LOCAL.LOGS to role SUMMIT_APP_LEGEND_EXECUTE;
+grant insert on table SUMMIT_APP_LOCAL.LOGS.LOG_TABLE to role SUMMIT_APP_LEGEND_EXECUTE;
+
+use role SUMMIT_APP_CONSUMER
+create share SUMMIT_APP_LOGS;
+grant usage on database SUMMIT_APP_LOCAL to share SUMMIT_APP_LOGS;
+grant usage on schema SUMMIT_APP_LOCAL.LOGS to share SUMMIT_APP_LOGS;
+grant select on table SUMMIT_APP_LOCAL.LOGS.LOG_TABLE to share SUMMIT_APP_LOGS;
+
+alter share SUMMIT_APP_LOGS add accounts=<GS Provider Account>;
+
+```
 
 
 <br><br><br>

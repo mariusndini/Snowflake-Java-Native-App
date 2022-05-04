@@ -16,6 +16,8 @@ LANGUAGE JAVASCRIPT
 EXECUTE AS OWNER
 AS $$
 {
+
+
     const crypt = (salt, text) => {
       const textToChars = (text) => text.split("").map((c) => c.charCodeAt(0));
       const byteHex = (n) => ("0" + Number(n).toString(16)).substr(-2);
@@ -62,10 +64,10 @@ AS $$
 
 
     //WRITE LOG TO LOGS TABLE
-    var insertStmt = `insert into DEMO_DB.LOGS.APP_LOG(select '${JSON.stringify(JSON.parse(ResultSet.getColumnValue(1)).log)}')` ;
+    var insertStmt = `insert into SUMMIT_APP_LOCAL.LOGS.APP_LOG(select '${JSON.stringify(JSON.parse(ResultSet.getColumnValue(1)).log)}')` ;
     snowflake.createStatement({sqlText:insertStmt }).execute();
 
-    var insertStmt = `insert into DEMO_DB.LOGS.JS_LOG(select '${ JSON.stringify(log) }')` ;
+    var insertStmt = `insert into SUMMIT_APP_LOCAL.LOGS.JS_LOG(select '${ JSON.stringify(log) }')` ;
     snowflake.createStatement({sqlText:insertStmt }).execute();
 
     //finaly return result
