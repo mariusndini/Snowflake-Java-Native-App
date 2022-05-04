@@ -1,6 +1,8 @@
 # GS | Snowflake - Native - App
 Below steps can be taken for replication to create GS 
-JAVA native app.
+JAVA native app. 
+<br> 
+Additionally logging has been added both to the Java Native App as well as the JavaScript native app.
 
 <br />
 <u><b>Provided</b></u><br />
@@ -31,14 +33,13 @@ create or replace table APP_LOG (evt string);
 create or replace table JS_LOG (evt string);
 ```
 
-## Logging in JAVA NATIVE App (Producer)
+## Logging in JAVA NATIVE App
 Please reference <b>SQL/producer_LOG.sql</b> for code base.
 <br>
 Please note you will need to import and use an ArrayList (import java.util.ArrayList).
 <br><br>
 
-Logging is exampled below:
-
+Logging exampled below:
 ```java
 // Create Array List
 static ArrayList<String> log = new ArrayList<String>(); 
@@ -54,10 +55,12 @@ return finalReturn;
 ```
 <b style="color:red">Please note that the above is a breaking change to the JAVA Native App code base. SQL and LOG is now a part of a JSON output which will need to handled on the Consumer side.</b>
 
-## Logging in JavaScript App (Consumer)
-Please reference <b>SQL/consumer.log</b> for code base.
+<br>
+
+## Logging in JavaScript App 
+Please reference <b>SQL/consumer.log</b> for code base. This refers to JavaScript wrapper around the Java App. 
 <br><br>
-Similar to JAVA Native App, JS consumer side definition also includes an array which has log objects inserted.
+Similar to JAVA Native App, JavaScript App also includes an array which has log objects inserted.
 ```javascript
 var log = [];
 log.push( {time: Date.now(), event: 'step 1 - init'} );
@@ -75,31 +78,33 @@ snowflake.createStatement({sqlText:insertStmt }).execute();
 var insertStmt = `insert into DEMO_DB.LOGS.JS_LOG(select '${ JSON.stringify(log) }')` ;
 snowflake.createStatement({sqlText:insertStmt }).execute();
 ```
-# Tables Shared Back to Producer
-At this point tables are ready and populated to be shared back to the producer. 
+<br>
 
-The producer has the option to create a [stream](https://docs.snowflake.com/en/user-guide/streams.html) on shared tables to track DML changes. Will need permission from consumer. 
+# Tables Shared Back to Producer
+At this point tables are populated and ready to be shared back to the producer. 
+
+The producer has the option to create a [stream](https://docs.snowflake.com/en/user-guide/streams.html) on shared tables to track DML changes. Permissioning from consumer possibly necessary. 
 <br><br>
 
 ## Log Examples
-<b>Native App</b> Log Example
+<b>Java Native App</b> Log Example
 ```json
 [{"time":" 1651628262838","method":"call","class":"legend"},{"time":" 1651628262867","event":"step 3"},{"time":" 1651628262871","p1":"MyParameter"},{"time":" 1651628262926","event":"step 3"},{"time":" 1651628263374","event":"step 3"},{"time":" 1651628263375","event":"final step"},{"time":" 1651628263375","sql":"Legend SQL Goes Here - Test App (SQL THIS FROM TABLE WHERE VALUE > 1)"}]
 ```
 <br> 
-<b>Consumer JS App</b> Log Example
+<b>Wrapper JavaScript App</b> Log Example
 
 ```json
-[{"time":1651628261651,"event":"step 1 - init"},{"time":1651628263512,"event":"step 2 - complete running java code"},{"time":1651628263512,"event":"step 3 - got legend query"},{"time":1651628263512,"event":"step - 4 - replaced legend query"},{"time":1651628263512,"event":"step 5 - almost done"},{"time":1651628263563,"acct":"SFSENORTHAMERICA_MARIUS"},{"time":1651628263563,"finalQuery":"select listagg(object_construct(*)::varchar, ') from (select cp.isin,cp.EARNINGS_PER_SHARE, smq."Marturity Date",smq."Sector"                                                        from DEMO_DB.DEVELOPMENT_TEST.CUSTOMER_PORTFOLIO cp join ("select \"root\".NAME as \"Name\", \"root\".FIRMID as \"FirmId\" from PERSON as \"root\"")                                                       smq on cp.ISIN = smq."Isin")"}]
+[{"time":1651628261651,"event":"step 1 - init"},{"time":1651628263512,"event":"step 2 - complete running java code"},{"time":1651628263512,"event":"step 3 - got legend query"},{"time":1651628263512,"event":"step - 4 - replaced legend query"},{"time":1651628263512,"event":"step 5 - almost done"},{"time":1651628263563,"acct":"SFSENORTHAMERICA_MARIUS"},{"time":1651628263563,"finalQuery":"select listagg(object_construct(*)::varchar, ') from (select cp.isin,cp.EARNINGS_PER_SHARE, smq."Marturity Date",smq."Sector" from DEMO_DB.DEVELOPMENT_TEST.CUSTOMER_PORTFOLIO cp join ("select \"root\".NAME as \"Name\", \"root\".FIRMID as \"FirmId\" from PERSON as \"root\"") smq on cp.ISIN = smq."Isin")"}]
 ```
 
 <br>
 
 ## Currently Not implemented
 
-Logging encryption - as of right now consumer has ability to see all logs. Encryption is possible within the Java Native App as it is completely self contained. 
+Logging encryption - as setup currently consumer has ability to view logs. Encryption is possible prior to writing results to logging table. Producer can decrypt data once it is shared back.
 
-<br>Encryption is unlikely on the Javascript consumer UDF definition as the consumer owns this part of the process.
+
 
 
 
